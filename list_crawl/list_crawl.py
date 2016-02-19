@@ -3,14 +3,18 @@ import sys
 ###
 from collections import defaultdict
 ###
-from prettyplotlib import plt
+# from prettyplotlib import plt
 ###
 import boto
 conn = boto.connect_s3(anon=True)
 pds = conn.get_bucket('aws-publicdatasets')
 
+# CC-MAIN-2016-07
+target = str(sys.argv[1])
+
+sys.stdout.write('Processing {}\n'.format(target))
+
 # Get all segments
-target = 'CC-MAIN-2014-41'
 segments = list(pds.list('common-crawl/crawl-data/{}/segments/'.format(target), delimiter='/'))
 # Record the total size and all file paths for the segments
 files = dict(warc=[], wet=[], wat=[], segment=[x.name for x in segments])
@@ -51,18 +55,18 @@ for ftype, fsize in size.items():
 
 ###
 # Plot
-for ftype, fsize in size.items():
-  if not fsize:
-    continue
-  plt.hist(fsize, bins=50)
-  plt.xlabel('Size (bytes)')
-  plt.ylabel('Count')
-  plt.title('Distribution for {}'.format(ftype.upper()))
-  plt.savefig(prefix + '{}_dist.pdf'.format(ftype))
-  #plt.show(block=True)
-  plt.close()
-
+#for ftype, fsize in size.items():
+#  if not fsize:
+#    continue
+#  plt.hist(fsize, bins=50)
+#  plt.xlabel('Size (bytes)')
+#  plt.ylabel('Count')
+#  plt.title('Distribution for {}'.format(ftype.upper()))
+#  plt.savefig(prefix + '{}_dist.pdf'.format(ftype))
+#  #plt.show(block=True)
+#  plt.close()
 ###
+
 # Find missing WAT / WET files
 warc = set([x.strip() for x in open(prefix + 'warc.paths').readlines()])
 wat = [x.strip() for x in open(prefix + 'wat.paths').readlines()]
