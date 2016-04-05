@@ -7,7 +7,10 @@ from collections import defaultdict
 ###
 import boto
 conn = boto.connect_s3(anon=True)
-pds = conn.get_bucket('aws-publicdatasets')
+
+# Since April 2016, the public dataset bucket is s3://commoncrawl 
+# (migrated from s3://aws-publicdatasets/common-crawl)
+pds = conn.get_bucket('commoncrawl')
 
 # CC-MAIN-2016-07
 target = str(sys.argv[1])
@@ -15,7 +18,7 @@ target = str(sys.argv[1])
 sys.stdout.write('Processing {}\n'.format(target))
 
 # Get all segments
-segments = list(pds.list('common-crawl/crawl-data/{}/segments/'.format(target), delimiter='/'))
+segments = list(pds.list('crawl-data/{}/segments/'.format(target), delimiter='/'))
 # Record the total size and all file paths for the segments
 files = dict(warc=[], wet=[], wat=[], segment=[x.name for x in segments])
 size = dict(warc=[], wet=[], wat=[])
@@ -51,7 +54,7 @@ for ftype, fsize in size.items():
 ###
 # To upload to the correct spot on S3
 # gzip *.paths
-# s3cmd put --acl-public *.paths.gz s3://aws-publicdatasets/common-crawl/crawl-data/CC-MAIN-YYYY-WW/
+# s3cmd put --acl-public *.paths.gz s3://commoncrawl/crawl-data/CC-MAIN-YYYY-WW/
 
 ###
 # Plot
@@ -86,5 +89,5 @@ sys.stderr.write('Total of {} missing segments with {} missing files\n'.format(l
 for seg, files in missing_segments.iteritems():
   #sys.stderr.write('{} has {} missing parts\n'.format(seg, len(files)))
   f = open(prefix + 'seg_{}'.format(seg), 'w')
-  [f.write('s3a://aws-publicdatasets/{}\n'.format(fn)) for fn in files]
+  [f.write('s3a://commoncrawl/{}\n'.format(fn)) for fn in files]
   f.close()

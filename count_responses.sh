@@ -8,7 +8,7 @@ mkdir -p responses
 mkdir -p size
 ###
 # Get the data from S3 and send it to stdout, where zcat decompresses it
-s3cmd get s3://aws-publicdatasets/$1 - | zcat | \
+s3cmd get s3://commoncrawl/$1 - | zcat | \
 # send the data two places, first to count how many bytes and record that
 tee >(wc --bytes > size/`basename $1`) | \
 # second to find all response results and count the number of times that's seen
