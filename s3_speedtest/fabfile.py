@@ -33,6 +33,6 @@ def aws_credentials():
 def speedtest(n=5):
   put('random.input')
   start = time.time()
-  run('''time cat random.input | parallel --jobs {n} --no-notice "s3cmd get s3://aws-publicdatasets/{{}} - > /dev/null && echo Done"'''.format(n=n))
+  run('''time cat random.input | parallel --jobs {n} --no-notice "s3cmd get s3://commoncrawl/{{}} - > /dev/null && echo Done"'''.format(n=n))
   total = time.time() - start
   print 'Completed: {} seconds'.format(total)

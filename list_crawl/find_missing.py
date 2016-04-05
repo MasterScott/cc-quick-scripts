@@ -26,5 +26,5 @@ sys.stderr.write('Total of {} missing segments with {} missing files\n'.format(l
 for seg, files in missing_segments.iteritems():
   #sys.stderr.write('{} has {} missing parts\n'.format(seg, len(files)))
   f = open(prefix + 'seg_{}'.format(seg), 'w')
-  [f.write('s3a://aws-publicdatasets/{}\n'.format(fn)) for fn in files]
+  [f.write('s3a://commoncrawl/{}\n'.format(fn)) for fn in files]
   f.close()

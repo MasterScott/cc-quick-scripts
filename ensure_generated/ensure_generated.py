@@ -2,11 +2,14 @@ import sys
 ###
 import boto
 conn = boto.connect_s3(anon=True)
-pds = conn.get_bucket('aws-publicdatasets')
+
+# Since April 2016, the public dataset bucket is s3://commoncrawl 
+# (migrated from s3://aws-publicdatasets/common-crawl)
+pds = conn.get_bucket('commoncrawl')
 
 # Get all segments
-# s3://aws-publicdatasets/common-crawl/nutch/segments.20150123/
-target = "common-crawl/nutch/segments.20150929/"
+# s3://commoncrawl/nutch/segments.20150929/
+target = "nutch/segments.20150929/"
 segments = list(pds.list(target, delimiter='/'))
 print 'Total of {} segments'.format(len(segments))
 
@@ -48,10 +51,10 @@ with open('/tmp/good_segs', 'w') as f:
   for size in d:
     good_seg = d[size][-1]
     good_segs.add(good_seg)
-    f.write('s3a://aws-publicdatasets/{}\n'.format(good_seg.rstrip('/')))
+    f.write('s3a://commoncrawl/{}\n'.format(good_seg.rstrip('/')))
 
 all_segs = set(x[0].name for x in seg_sizes)
 bad_segs = all_segs - good_segs | dead_segs
 with open('/tmp/bad_segs', 'w') as f:
   for seg in bad_segs:
-    f.write('s3://aws-publicdatasets/{}\n'.format(seg.rstrip('/')))
+    f.write('s3://commoncrawl/{}\n'.format(seg.rstrip('/')))

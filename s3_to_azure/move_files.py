@@ -32,7 +32,7 @@ while todo or in_progress:
     try:
       resp = db.get_blob_properties(bucket, path)
     except WindowsAzureMissingResourceError:
-      db.copy_blob(bucket, path, 'https://aws-publicdatasets.s3.amazonaws.com/' + path)
+      db.copy_blob(bucket, path, 'https://commoncrawl.s3.amazonaws.com/' + path)
       new_progress.add(path)
   in_progress = new_progress
   time.sleep(300)
