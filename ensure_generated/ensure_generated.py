@@ -9,7 +9,8 @@ pds = conn.get_bucket('commoncrawl')
 
 # Get all segments
 # s3://commoncrawl/nutch/segments.20150929/
-target = "nutch/segments.20150929/"
+# target = "nutch/segments.20150929"
+target = str(sys.argv[1])
 segments = list(pds.list(target, delimiter='/'))
 print 'Total of {} segments'.format(len(segments))
 
