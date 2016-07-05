@@ -74,20 +74,32 @@ for ftype, fsize in size.items():
 warc = set([x.strip() for x in open(prefix + 'warc.paths').readlines()])
 wat = [x.strip() for x in open(prefix + 'wat.paths').readlines()]
 wat = set([x.replace('.warc.wat.', '.warc.').replace('/wat/', '/warc/') for x in wat])
+wet = [x.strip() for x in open(prefix + 'wet.paths').readlines()]
+wet = set([x.replace('.warc.wet.', '.warc.').replace('/wet/', '/warc/') for x in wet])
 # Work out the missing files and segments
 missing = sorted(warc - wat)
 missing_segments = defaultdict(list)
+missing_files = 0
 for fn in missing:
   start, suffix = fn.split('/warc/')
   segment = start.split('/')[-1]
   missing_segments[segment].append(fn)
+  missing_files += 1
+missing = sorted(warc - wet)
+for fn in missing:
+  start, suffix = fn.split('/warc/')
+  segment = start.split('/')[-1]
+  if fn not in missing_segments[segment]:
+    missing_files += 1
+    print(">>", segment, fn)
+    missing_segments[segment].append(fn)
 # Save the files such that we can run a new WEATGenerator job
 prefix += 'weat.queued/'
 if not os.path.exists(prefix):
   os.mkdir(prefix)
-sys.stderr.write('Total of {} missing segments with {} missing files\n'.format(len(missing_segments), len(warc - wat)))
+sys.stderr.write('Total of {} missing segments with {} missing files\n'.format(len(missing_segments), missing_files))
 for seg, files in missing_segments.iteritems():
-  #sys.stderr.write('{} has {} missing parts\n'.format(seg, len(files)))
+  sys.stderr.write('{} has {} missing parts\n'.format(seg, len(files)))
   f = open(prefix + 'seg_{}'.format(seg), 'w')
   [f.write('s3a://commoncrawl/{}\n'.format(fn)) for fn in files]
   f.close()
