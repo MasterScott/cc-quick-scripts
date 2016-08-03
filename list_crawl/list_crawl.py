@@ -97,7 +97,7 @@ for fn in missing:
 prefix += 'weat.queued/'
 if not os.path.exists(prefix):
   os.mkdir(prefix)
-sys.stderr.write('Total of {} missing segments with {} missing files\n'.format(len(missing_segments), missing_files))
+sys.stderr.write('Total of {} missing/incomplete segments with {} missing parts\n'.format(len(missing_segments), missing_files))
 for seg, files in missing_segments.iteritems():
   sys.stderr.write('{} has {} missing parts\n'.format(seg, len(files)))
   f = open(prefix + 'seg_{}'.format(seg), 'w')
