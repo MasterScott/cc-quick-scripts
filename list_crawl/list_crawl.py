@@ -15,7 +15,7 @@ pds = conn.get_bucket('commoncrawl')
 # CC-MAIN-2016-07
 target = str(sys.argv[1])
 
-sys.stdout.write('Processing {}\n'.format(target))
+sys.stderr.write('Processing {}\n'.format(target))
 
 # Get all segments
 segments = list(pds.list('crawl-data/{}/segments/'.format(target), delimiter='/'))
@@ -77,22 +77,27 @@ wat = set([x.replace('.warc.wat.', '.warc.').replace('/wat/', '/warc/') for x in
 wet = [x.strip() for x in open(prefix + 'wet.paths').readlines()]
 wet = set([x.replace('.warc.wet.', '.warc.').replace('/wet/', '/warc/') for x in wet])
 # Work out the missing files and segments
-missing = sorted(warc - wat)
+missing_wat = sorted(warc - wat)
 missing_segments = defaultdict(list)
 missing_files = 0
-for fn in missing:
+for fn in missing_wat:
   start, suffix = fn.split('/warc/')
   segment = start.split('/')[-1]
   missing_segments[segment].append(fn)
   missing_files += 1
-missing = sorted(warc - wet)
-for fn in missing:
+missing_wet = sorted(warc - wet)
+unpaired_wat_wet = []
+for fn in missing_wet:
   start, suffix = fn.split('/warc/')
   segment = start.split('/')[-1]
   if fn not in missing_segments[segment]:
     missing_files += 1
-    print(">>", segment, fn)
     missing_segments[segment].append(fn)
+    sys.stderr.write('Missing WET file (WAT exists!) in segment {} for WARC: {}\n'.format(segment, fn))
+    sys.stderr.write('Remove WET to resume: {}\n'.format(fn.replace('.warc.', '.warc.wet.').replace('/warc/', '/wet/')))
+  elif fn not in missing_wat:
+    sys.stderr.write('Missing WAT file (WET exists!) in segment {} for WARC: {}\n'.format(segment, fn))
+    sys.stderr.write('Remove WAT to resume: {}\n'.format(fn.replace('.warc.', '.warc.wat.').replace('/warc/', '/wat/')))
 # Save the files such that we can run a new WEATGenerator job
 prefix += 'weat.queued/'
 if not os.path.exists(prefix):
