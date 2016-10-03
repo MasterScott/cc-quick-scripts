@@ -22,14 +22,18 @@ segments = list(pds.list('crawl-data/{}/segments/'.format(target), delimiter='/'
 # Record the total size and all file paths for the segments
 files = dict(warc=[], wet=[], wat=[], segment=[x.name for x in segments])
 size = dict(warc=[], wet=[], wat=[])
+files_per_segment = dict()
 
 # Traverse each segment and all the files they contain
 for i, segment in enumerate(segments):
   sys.stderr.write('\rProcessing segment {} of {}'.format(i, len(segments)))
+  seg = segment.name.split('/')[-2]
+  files_per_segment[seg] = defaultdict(int)
   for ftype in ['warc', 'wat', 'wet']:
     for f in pds.list(segment.name + ftype + '/'):
       files[ftype].append(f.name)
       size[ftype].append(f.size)
+      files_per_segment[seg][ftype] += 1
 sys.stderr.write('\n')
 
 # Write total size and file paths to files
@@ -94,17 +98,17 @@ for fn in missing_wet:
     missing_files += 1
     missing_segments[segment].append(fn)
     sys.stderr.write('Missing WET file (WAT exists!) in segment {} for WARC: {}\n'.format(segment, fn))
-    sys.stderr.write('Remove WET to resume: {}\n'.format(fn.replace('.warc.', '.warc.wet.').replace('/warc/', '/wet/')))
+    sys.stderr.write('Remove WAT to resume: {}\n'.format(fn.replace('.warc.', '.warc.wat.').replace('/warc/', '/wat/')))
   elif fn not in missing_wat:
     sys.stderr.write('Missing WAT file (WET exists!) in segment {} for WARC: {}\n'.format(segment, fn))
-    sys.stderr.write('Remove WAT to resume: {}\n'.format(fn.replace('.warc.', '.warc.wat.').replace('/warc/', '/wat/')))
+    sys.stderr.write('Remove WET to resume: {}\n'.format(fn.replace('.warc.', '.warc.wet.').replace('/warc/', '/wet/')))
 # Save the files such that we can run a new WEATGenerator job
 prefix += 'weat.queued/'
 if not os.path.exists(prefix):
   os.mkdir(prefix)
 sys.stderr.write('Total of {} missing/incomplete segments with {} missing parts\n'.format(len(missing_segments), missing_files))
 for seg, files in missing_segments.iteritems():
-  sys.stderr.write('{} has {} missing parts\n'.format(seg, len(files)))
+  sys.stderr.write('{} has {} missing parts out of {}\n'.format(seg, len(files), files_per_segment[seg]['warc']))
   f = open(prefix + 'seg_{}'.format(seg), 'w')
   [f.write('s3a://commoncrawl/{}\n'.format(fn)) for fn in files]
   f.close()
