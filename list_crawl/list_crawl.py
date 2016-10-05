@@ -20,8 +20,9 @@ sys.stderr.write('Processing {}\n'.format(target))
 # Get all segments
 segments = list(pds.list('crawl-data/{}/segments/'.format(target), delimiter='/'))
 # Record the total size and all file paths for the segments
-files = dict(warc=[], wet=[], wat=[], segment=[x.name for x in segments])
-size = dict(warc=[], wet=[], wat=[])
+files = dict(warc=[], wet=[], wat=[], segment=[x.name for x in segments],
+             robotstxt=[], non200responses=[])
+size = dict(warc=[], wet=[], wat=[], robotstxt=[], non200responses=[])
 files_per_segment = dict()
 
 # Traverse each segment and all the files they contain
@@ -29,8 +30,12 @@ for i, segment in enumerate(segments):
   sys.stderr.write('\rProcessing segment {} of {}'.format(i, len(segments)))
   seg = segment.name.split('/')[-2]
   files_per_segment[seg] = defaultdict(int)
-  for ftype in ['warc', 'wat', 'wet']:
-    for f in pds.list(segment.name + ftype + '/'):
+  for ftype in ['warc', 'wat', 'wet', 'robotstxt', 'non200responses']:
+    path = segment.name + ftype + '/'
+    if ftype == 'non200responses':
+      # poorly named for historical reasons
+      path = segment.name + 'crawldiagnostics/'
+    for f in pds.list(path):
       files[ftype].append(f.name)
       size[ftype].append(f.size)
       files_per_segment[seg][ftype] += 1
@@ -42,7 +47,7 @@ if not os.path.exists(prefix):
   os.makedirs(prefix)
 ###
 f = open(prefix + 'crawl.size', 'w')
-for ftype, val in size.items():
+for ftype, val in sorted(size.items()):
   f.write('{}\t{}\t{}\n'.format(ftype, sum(val), len(val)))
 f.close()
 ###
