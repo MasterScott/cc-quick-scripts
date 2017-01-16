@@ -21,8 +21,8 @@ sys.stderr.write('Processing {}\n'.format(target))
 segments = list(pds.list('crawl-data/{}/segments/'.format(target), delimiter='/'))
 # Record the total size and all file paths for the segments
 files = dict(warc=[], wet=[], wat=[], segment=[x.name for x in segments],
-             robotstxt=[], non200responses=[])
-size = dict(warc=[], wet=[], wat=[], robotstxt=[], non200responses=[])
+             robotstxt=[], non200responses=[], cdx=[])
+size = dict(warc=[], wet=[], wat=[], robotstxt=[], non200responses=[], cdx=[])
 files_per_segment = dict()
 
 # Traverse each segment and all the files they contain
@@ -39,6 +39,10 @@ for i, segment in enumerate(segments):
       files[ftype].append(f.name)
       size[ftype].append(f.size)
       files_per_segment[seg][ftype] += 1
+  for f in pds.list('cc-index/cdx/' + target + '/segments/' + seg + '/'):
+    files['cdx'].append(f.name)
+    size['cdx'].append(f.size)
+    files_per_segment[seg]['cdx'] += 1
 sys.stderr.write('\n')
 
 # Write total size and file paths to files
@@ -117,3 +121,11 @@ for seg, files in missing_segments.iteritems():
   f = open(prefix + 'seg_{}'.format(seg), 'w')
   [f.write('s3a://commoncrawl/{}\n'.format(fn)) for fn in files]
   f.close()
+
+for seg in files_per_segment.keys():
+  warcs = files_per_segment[seg]['warc']
+  warcs += files_per_segment[seg]['robotstxt']
+  warcs += files_per_segment[seg]['non200responses']
+  cdx = files_per_segment[seg]['cdx']
+  if cdx != warcs:
+    sys.stderr.write('{} has incorrect number of cdx files ({}, expected {})\n'.format(seg, cdx, warcs))
