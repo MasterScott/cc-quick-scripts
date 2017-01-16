@@ -11,8 +11,12 @@ pds = conn.get_bucket('commoncrawl')
 # s3://commoncrawl/nutch/segments.20150929/
 # target = "nutch/segments.20150929"
 target = str(sys.argv[1])
+expected_fetch_lists = 400
+if len(sys.argv) >= 3:
+  expected_fetch_lists = int(sys.argv[2])
 segments = list(pds.list(target, delimiter='/'))
 print 'Total of {} segments'.format(len(segments))
+print('Expected number of fetch lists per segment: {}'.format(expected_fetch_lists))
 
 good, bad = 0, 0
 
@@ -22,7 +26,7 @@ dead_segs = set()
 for i, segment in enumerate(segments):
   sys.stderr.write('\rProcessing segment {} of {}'.format(i, len(segments)))
   fetchlists = list(pds.list(segment.name + 'crawl_generate/'))
-  if len(fetchlists) != 400:
+  if len(fetchlists) != expected_fetch_lists:
     bad += 1
     sys.stderr.write('\n')
     sys.stderr.write('{} has {} fetchlists\n'.format(segment.name, len(fetchlists)))
