@@ -129,3 +129,11 @@ for seg in files_per_segment.keys():
   cdx = files_per_segment[seg]['cdx']
   if cdx != warcs:
     sys.stderr.write('{} has incorrect number of cdx files ({}, expected {})\n'.format(seg, cdx, warcs))
+    missing_files += (warcs - cdx)
+
+if len(segments) != 100:
+  sys.stderr.write('expected 100 segments, got {}\n'.format(len(segments)))
+  sys.exit(1)
+
+if missing_files != 0:
+  sys.exit(1)

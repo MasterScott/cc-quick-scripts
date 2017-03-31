@@ -45,7 +45,8 @@ seg_sizes = sorted(seg_sizes, key=lambda x: x[1])
 print 'Total good segments: {}'.format(good)
 print 'Total bad segments: {}'.format(bad)
 print 'Total dead segments: {}'.format(len(dead_segs))
-print 'Average size: {}'.format(sum(x[1] for x in seg_sizes) / len(seg_sizes))
+if len(seg_sizes) != 0:
+  print 'Average size: {}'.format(sum(x[1] for x in seg_sizes) / len(seg_sizes))
 print 'Unique total sizes for segments: {}'.format(len(set(x[1] for x in seg_sizes)))
 
 # rstrip the segment ends as sometimes we do silly tricks to get the segment name
@@ -63,3 +64,7 @@ bad_segs = all_segs - good_segs | dead_segs
 with open('/tmp/bad_segs', 'w') as f:
   for seg in bad_segs:
     f.write('s3://commoncrawl/{}\n'.format(seg.rstrip('/')))
+
+if len(bad_segs) != 0:
+  # exit with error to stop crawl workflow, manual interaction required
+  sys.exit(1)
