@@ -93,6 +93,7 @@ wet = set([x.replace('.warc.wet.', '.warc.').replace('/wet/', '/warc/') for x in
 missing_wat = sorted(warc - wat)
 missing_segments = defaultdict(list)
 missing_files = 0
+missing_cdx = 0
 for fn in missing_wat:
   start, suffix = fn.split('/warc/')
   segment = start.split('/')[-1]
@@ -129,11 +130,14 @@ for seg in files_per_segment.keys():
   cdx = files_per_segment[seg]['cdx']
   if cdx != warcs:
     sys.stderr.write('{} has incorrect number of cdx files ({}, expected {})\n'.format(seg, cdx, warcs))
-    missing_files += (warcs - cdx)
+    missing_cdx += (warcs - cdx)
 
 if len(segments) != 100:
   sys.stderr.write('expected 100 segments, got {}\n'.format(len(segments)))
   sys.exit(1)
 
+if missing_cdx != 0:
+  sys.exit(2)
+
 if missing_files != 0:
-  sys.exit(1)
+  sys.exit(3)
