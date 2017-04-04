@@ -89,16 +89,19 @@ wat = [x.strip() for x in open(prefix + 'wat.paths').readlines()]
 wat = set([x.replace('.warc.wat.', '.warc.').replace('/wat/', '/warc/') for x in wat])
 wet = [x.strip() for x in open(prefix + 'wet.paths').readlines()]
 wet = set([x.replace('.warc.wet.', '.warc.').replace('/wet/', '/warc/') for x in wet])
+
 # Work out the missing files and segments
 missing_wat = sorted(warc - wat)
 missing_segments = defaultdict(list)
 missing_files = 0
 missing_cdx = 0
+
 for fn in missing_wat:
   start, suffix = fn.split('/warc/')
   segment = start.split('/')[-1]
   missing_segments[segment].append(fn)
   missing_files += 1
+
 missing_wet = sorted(warc - wet)
 unpaired_wat_wet = []
 for fn in missing_wet:
@@ -109,9 +112,14 @@ for fn in missing_wet:
     missing_segments[segment].append(fn)
     sys.stderr.write('Missing WET file (WAT exists!) in segment {} for WARC: {}\n'.format(segment, fn))
     sys.stderr.write('Remove WAT to resume: {}\n'.format(fn.replace('.warc.', '.warc.wat.').replace('/warc/', '/wat/')))
-  elif fn not in missing_wat:
+
+for fn in missing_wat:
+  if fn not in missing_wet:
+    start, suffix = fn.split('/warc/')
+    segment = start.split('/')[-1]
     sys.stderr.write('Missing WAT file (WET exists!) in segment {} for WARC: {}\n'.format(segment, fn))
     sys.stderr.write('Remove WET to resume: {}\n'.format(fn.replace('.warc.', '.warc.wet.').replace('/warc/', '/wet/')))
+
 # Save the files such that we can run a new WEATGenerator job
 prefix += 'weat.queued/'
 if not os.path.exists(prefix):
