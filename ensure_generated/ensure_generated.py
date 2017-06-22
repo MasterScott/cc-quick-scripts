@@ -1,15 +1,15 @@
 import sys
 ###
 import boto
-conn = boto.connect_s3(anon=True)
+conn = boto.connect_s3()
 
-# Since April 2016, the public dataset bucket is s3://commoncrawl 
-# (migrated from s3://aws-publicdatasets/common-crawl)
-pds = conn.get_bucket('commoncrawl')
+# Since June 2017, Nutch intermediate crawl data isn't kept
+# on the public data set bucket
+pds = conn.get_bucket('commoncrawl-nutch')
 
 # Get all segments
-# s3://commoncrawl/nutch/segments.20150929/
-# target = "nutch/segments.20150929"
+# s3://commoncrawl-nutch/segments.20150929/
+# target = "segments.20150929"
 target = str(sys.argv[1])
 expected_fetch_lists = 400
 if len(sys.argv) >= 3:
@@ -65,6 +65,6 @@ with open('/tmp/bad_segs', 'w') as f:
   for seg in bad_segs:
     f.write('s3://commoncrawl/{}\n'.format(seg.rstrip('/')))
 
-if len(bad_segs) != 0:
+if len(bad_segs) != 0 or len(good_segs) == 0:
   # exit with error to stop crawl workflow, manual interaction required
   sys.exit(1)
