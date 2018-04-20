@@ -5,7 +5,8 @@ conn = boto.connect_s3()
 
 # Since June 2017, Nutch intermediate crawl data isn't kept
 # on the public data set bucket
-pds = conn.get_bucket('commoncrawl-nutch')
+bucket = 'commoncrawl-nutch'
+pds = conn.get_bucket(bucket)
 
 # Get all segments
 # s3://commoncrawl-nutch/segments.20150929/
@@ -14,6 +15,9 @@ target = str(sys.argv[1])
 expected_fetch_lists = 400
 if len(sys.argv) >= 3:
   expected_fetch_lists = int(sys.argv[2])
+expected_segments = 100
+if len(sys.argv) >= 4:
+  expected_segments = int(sys.argv[3])
 segments = list(pds.list(target, delimiter='/'))
 print 'Total of {} segments'.format(len(segments))
 print('Expected number of fetch lists per segment: {}'.format(expected_fetch_lists))
@@ -57,14 +61,18 @@ with open('/tmp/good_segs', 'w') as f:
   for size in d:
     good_seg = d[size][-1]
     good_segs.add(good_seg)
-    f.write('s3a://commoncrawl/{}\n'.format(good_seg.rstrip('/')))
+    f.write('s3a://{}/{}\n'.format(bucket, good_seg.rstrip('/')))
 
 all_segs = set(x[0].name for x in seg_sizes)
 bad_segs = all_segs - good_segs | dead_segs
 with open('/tmp/bad_segs', 'w') as f:
   for seg in bad_segs:
-    f.write('s3://commoncrawl/{}\n'.format(seg.rstrip('/')))
+    s3seg = 's3://{}/{}\n'.format(bucket, seg.rstrip('/'))
+    f.write(s3seg)
 
-if len(bad_segs) != 0 or len(good_segs) == 0:
+if len(bad_segs) != 0 or len(good_segs) != expected_segments:
   # exit with error to stop crawl workflow, manual interaction required
+  print('Need to fix segments:')
+  print('- delete bad segments listed in /tmp/bad_segs')
+  print('- verify  segments listed in /tmp/bad_segs')
   sys.exit(1)
