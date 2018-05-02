@@ -17,6 +17,13 @@ target = str(sys.argv[1])
 
 sys.stderr.write('Processing {}\n'.format(target))
 
+cdx_bucket_conn = pds
+cdx_path = 'cc-index/cdx/' + target
+if len(sys.argv) > 2:
+    print('Looking for cdx files in s3://{}/{}/'.format(sys.argv[2], sys.argv[3]))
+    cdx_bucket_conn = boto.connect_s3().get_bucket(sys.argv[2])
+    cdx_path = str(sys.argv[3])
+
 # Get all segments
 segments = list(pds.list('crawl-data/{}/segments/'.format(target), delimiter='/'))
 # Record the total size and all file paths for the segments
@@ -39,7 +46,7 @@ for i, segment in enumerate(segments):
       files[ftype].append(f.name)
       size[ftype].append(f.size)
       files_per_segment[seg][ftype] += 1
-  for f in pds.list('cc-index/cdx/' + target + '/segments/' + seg + '/'):
+  for f in cdx_bucket_conn.list(cdx_path + '/segments/' + seg + '/'):
     files['cdx'].append(f.name)
     size['cdx'].append(f.size)
     files_per_segment[seg]['cdx'] += 1
